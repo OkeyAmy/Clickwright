@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>{{ cfg.name }} — {{ cfg.operation }}</title>
+<style>
+  body { font-family: Verdana, Geneva, sans-serif; font-size: 12px; background: #8a8f99; margin: 0; padding: 22px; }
+  .frame { width: 560px; margin: 0 auto; background: #d9d9d2; border: 2px outset #f0f0ea; }
+  .bar { background: linear-gradient(#3a5a8c, #2b4470); color: #fff; padding: 6px 10px; font-weight: bold; font-size: 11px; }
+  .crumb { background: #c8c8c0; padding: 3px 10px; font-size: 10px; color: #333; border-bottom: 1px solid #a9a9a2; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  td { padding: 5px 10px; }
+  .lbl { width: 132px; color: #333; }
+  input[type=text], input[type=password], select {
+    font-family: inherit; font-size: 12px; padding: 3px 5px;
+    border: 1px inset #9a9a94; background: #fffef8; width: 200px;
+  }
+  .foot { padding: 4px 10px 14px; }
+  .btn { font-family: inherit; font-size: 11px; padding: 4px 14px; border: 2px outset #f0f0ea; background: #d0d0c8; cursor: pointer; }
+  .note { font-size: 10px; color: #5a5a52; margin-left: 10px; }
+  .err { background: #ffe9e9; border: 1px solid #c66; color: #922; padding: 6px 10px; margin: 10px; font-size: 11px; }
+  .ok { background: #e9f7e9; border: 1px solid #6a6; color: #262; padding: 10px; margin: 12px; }
+  a { color: #2b4470; }
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="bar">{{ cfg.name }} &nbsp;—&nbsp; {{ cfg.operation }}</div>
+  <div class="crumb">Home &gt; {{ cfg.operation }} &gt; {% block crumb %}{% endblock %}</div>
+  {% if error %}<div class="err">{{ error }}</div>{% endif %}
+  {% block content %}{% endblock %}
+</div>
+</body>
+</html>

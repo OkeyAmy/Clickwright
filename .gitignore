@@ -1,0 +1,144 @@
+# ─────────────────────────────────────────────────────────────────────
+# Clickwright — .gitignore
+# Organised by what generates the mess. If you add a new runtime
+# output directory, register it under §5 so credentials and PII can
+# never reach a commit.
+# ─────────────────────────────────────────────────────────────────────
+
+# ── 1 · Secrets and environment ──────────────────────────────────────
+# Never commit real keys, tokens or sign-in details. The example file
+# stays tracked on purpose — it is the template everyone copies.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*credentials*.json
+application_default_credentials.json
+.gcloud/
+.gac-credentials/
+
+# Owner-only credential file written by app/governance/secrets.py
+var/secrets.json
+secrets.json
+
+# ── 2 · Python ───────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.python-version
+
+# tooling caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.pytype/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.tox/
+.nox/
+
+# packaging
+build/
+dist/
+*.egg-info/
+*.egg
+pip-wheel-metadata/
+poetry.lock
+
+# Jupyter, if someone explores locally
+.ipynb_checkpoints/
+
+# ── 3 · Node / frontend ──────────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/tsconfig.tsbuildinfo
+frontend/.vite/
+frontend/vite.config.ts.timestamp-*
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+
+# ── 4 · Browser automation leftovers ─────────────────────────────────
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+*.webm
+*.har
+
+# Raw screen recordings of demo takes stay out of history; the trimmed
+# GIF under docs/assets is the artefact we ship.
+!/docs/assets/demo.gif
+
+# ── 5 · Clickwright runtime data (var/) ──────────────────────────────
+# Everything under var/ is produced at runtime and may contain PII,
+# screenshots of internal systems, or resolved secrets:
+#   var/registry/      compiled connectors
+#   var/runs/          audit trails per run
+#   var/artifacts/     step screenshots taken during exploration
+#   var/approvals/     human-in-the-loop decisions
+#   var/benchmarks/    measured explore-vs-replay numbers
+#   var/bench/         full benchmark reports
+#   var/secrets.json   local secret store (also pinned above)
+var/
+
+# ── 6 · Local assistant / tooling state ──────────────────────────────
+.claude/
+.impeccable/
+.remember/
+.continue/
+.aider*
+
+# ── 7 · Editors and IDEs ─────────────────────────────────────────────
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.recommended.json
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# ── 8 · Operating systems ────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.directory
+.fuse_hidden*
+
+# ── 9 · Cloud SDKs and emulators ─────────────────────────────────────
+firestore-data/
+ui-FIRESTORE_EMULATOR.backup
+.cloudstorage/
+.gcloud-local/
+firebase-debug.log
+
+# ── 11 · Project planning docs (local only) ──────────────────────────
+project.md
+claude.md
+idea.md
+
+# ── 10 · Logs and scratch ────────────────────────────────────────────
+*.log
+logs/
+tmp/
+.tmp/
+*.bak
+*.orig
+*.rej
+core
+core.*

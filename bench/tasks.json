@@ -1,0 +1,52 @@
+{
+  "description": "WebVoyager-style live-task suite. Exploration is graded by an LLM judge against the task; replay is graded deterministically (run.status + confirmation). Prices, model and retries come from .env like everywhere else.",
+  "tasks": [
+    {
+      "id": "wiki-grace-hopper",
+      "start_url": "https://en.wikipedia.org",
+      "goal": "Search Wikipedia for Grace Hopper and open her article.",
+      "replay_inputs": {"search_query": "Grace Hopper"}
+    },
+    {
+      "id": "quotes-love-tag",
+      "start_url": "https://quotes.toscrape.com",
+      "goal": "Open the page of the 'love' tag from the Top Ten tags list.",
+      "replay_inputs": {}
+    },
+    {
+      "id": "internet-login",
+      "start_url": "https://the-internet.herokuapp.com/login",
+      "goal": "Log into the secure area with username tomsmith and password SuperSecretPassword!, then confirm the secure area loaded.",
+      "username": "tomsmith",
+      "password": "SuperSecretPassword!",
+      "replay_inputs": {}
+    },
+    {
+      "id": "cura-appointment",
+      "start_url": "https://katalon-demo-cura.herokuapp.com/",
+      "goal": "Log into the CURA Healthcare portal and book a medical appointment: choose the Seoul facility, check hospital readmission, pick the Medicaid program, visit date 30/08/2026, comment 'Suite verification', submit and confirm.",
+      "username": "John Doe",
+      "password": "ThisIsNotAPassword",
+      "replay_inputs": {}
+    },
+    {
+      "id": "books-travel-category",
+      "start_url": "https://books.toscrape.com",
+      "goal": "Open the Travel category and view its first book.",
+      "replay_inputs": {}
+    },
+    {
+      "id": "portal-expense-claim",
+      "start_url": "http://localhost:8081/vendor/login",
+      "goal": "File a travel expense claim for invoice INV-BENCH-1, amount 284.50, cost centre CC-4410.",
+      "username": "demo-user",
+      "password": "demo-pass",
+      "replay_inputs": {
+        "claim_type": "Travel",
+        "invoice_reference": "INV-BENCH-1",
+        "amount_usd": 284.5,
+        "cost_centre": "CC-4410"
+      }
+    }
+  ]
+}

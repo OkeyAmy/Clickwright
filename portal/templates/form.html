@@ -1,0 +1,31 @@
+{% extends "_base.html" %}
+{% block crumb %}New {{ cfg.record }}{% endblock %}
+{% block content %}
+<form method="post" action="/{{ tenant }}/new">
+  <table>
+    {% for f in cfg.fields %}
+    <tr>
+      <td class="lbl">{{ f.label }}</td>
+      <td>
+        {% if f.widget == "select" %}
+          <select id="{{ f.id }}" name="{{ f.name }}">
+            {% for o in f.options %}<option value="{{ '' if loop.first else o }}">{{ o }}</option>{% endfor %}
+          </select>
+        {% else %}
+          <input type="text" id="{{ f.id }}" name="{{ f.name }}" autocomplete="off">
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  <div class="foot">
+    {% if drift %}
+      {# drifted UI: the submit input became a button with a testid #}
+      <button class="btn" type="submit" data-testid="{{ cfg.record }}-submit">{{ submit_label }}</button>
+    {% else %}
+      <input class="btn" type="submit" id="ctl00_submit" value="{{ submit_label }}">
+    {% endif %}
+    <span class="note">Fields marked * are required by policy 14-B.</span>
+  </div>
+</form>
+{% endblock %}
