@@ -42,10 +42,10 @@ it look at screenshots, let it click. It works. It's also expensive and slow —
 3. Click/type → go back to step 1
 4. Repeat 8–15 times per task
 
-A 10-step task on Gemini Pro costs roughly **$0.03–0.06** and takes **30–60 seconds**.
-Do it 1,000 times a month on the same task — expense filings, appointment bookings,
-status checks — and you've spent **$30–60** and waited **8–10 hours** on something a
-script could do in seconds.
+A 10-step task on Gemini Pro costs roughly **$0.03–0.06** and takes **30–60 seconds**
+(measured across CURA Healthcare and the bundled target). Do it 1,000 times a month on
+the same task — expense filings, appointment bookings, status checks — and you've spent
+**$30–60** and waited **8–10 hours** on something a script could do in seconds.
 
 Even if the system has an API, the agent still burns tokens figuring out how to call it:
 reading docs, handling auth, interpreting responses. The overhead is real.
@@ -60,11 +60,11 @@ deterministic replay: no screenshots, no model, no tokens. Just `POST` → done.
 | | Clickwright | Screen scrapers | Agent every time |
 | --- | --- | --- | --- |
 | How it drives the site | Real steps recorded from a real session | Fragile HTML parsing | AI looks and clicks, every run |
-| Cost per call | **$0** — no model | $0 | $0.03–0.06 per task |
+| Cost per call | **$0** — no model | $0 | $0.03–0.06 per task (measured) |
 | Speed per call | **~1–2 s** | fast | 30–60 s |
-| Token consumption | **Zero after compilation** | Zero | 8,000–30,000 per task |
-| Survives redesigns | **Yes — detects, repairs, republishes** | No | Yes, at full token cost |
-| Callable by other agents | **Yes — OpenAPI + SKILL.md published** | No | With glue code |
+| Token consumption | **Zero after compilation** | Zero | 8,000–30,000 per task (measured) |
+| Survives redesigns | **Yes — detects, repairs, republishes** (costs one model run) | No | Yes, at full token cost |
+| Callable by other agents | **Yes — OpenAPI + SKILL.md generated on demand** | No | With glue code |
 
 Computer-use agents burn tokens on every screen they see. Clickwright makes that a
 one-time cost.
@@ -198,7 +198,7 @@ Clickwright.
 |---|---|---|
 | 1 | **Explore** | An AI agent gets a URL and a goal in plain English. It opens a real browser, looks at the screen, decides, clicks, types, reads the result. Once. |
 | 2 | **Compile** | A second pass separates the values callers would change (amounts, references) from the structure, writes an input schema, and anchors assertions to visible page text — so a future replay can tell success from a silently wrong page. Steps are stored as stable locators recorded from the live page, never invented by the model. |
-| 3 | **Publish** | The result is a versioned connector: an OpenAPI document and a skill file other agents can load, scoped to the host it was compiled against. |
+| 3 | **Publish** | The result is a versioned connector: an OpenAPI document and a skill file, generated on demand from the stored playbook, scoped to the host it was compiled against. |
 | 4 | **Consume** | Any agent — one that has never opened a browser — loads that document and calls the site like an ordinary API. Deterministic replay: no model, seconds, $0. |
 | 5 | **Heal** | Scheduled canaries replay every connector. When a step stops matching, the run fails at that exact step, the repair loop re-learns it, verifies the result, and publishes the next version. No human asked. |
 
