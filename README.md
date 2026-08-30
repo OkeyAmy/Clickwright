@@ -243,6 +243,84 @@ flowchart LR
 
 ---
 
+## Architecture
+
+The model is in the loop exactly once, during exploration. Everything after
+that — every connector call, every canary, every heal — is deterministic.
+The diagram below is the whole system, and the edge labels are the real
+endpoints.
+
+```mermaid
+flowchart LR
+    subgraph Compile["Compile — model in the loop, once"]
+        C["Operator console<br/>(React) · SSE live view"]
+        EX["Explorer agent<br/>Gemini 3.5 Flash · ADK<br/>ComputerUseToolset"]
+        PW["PlaywrightComputer<br/>recorder · host fence<br/>selector resolution"]
+        T["Any website<br/>with no API"]
+        DI["Distiller<br/>Gemini 3.5 Flash"]
+        C -->|"POST /api/explore — goal + URL"| EX
+        EX -->|"screenshots → actions"| PW
+        PW -->|drives and records| T
+        PW -->|trajectory| DI
+    end
+
+    subgraph Plane["Control plane"]
+        RG[("Registry<br/>semver · OpenAPI · SKILL.md")]
+        SM[["Secret store<br/>Secret Manager / local file"]]
+        ST[("Store<br/>runs · approvals · benchmarks<br/>Firestore / local JSON")]
+        GATE["Policy gateway<br/>thresholds · injection blocks"]
+        RT["ConnectorRuntime<br/>deterministic replay"]
+        APP["Human decision<br/>approve · deny · answer"]
+        DI -->|"ConnectorVersion"| RG
+        SM -. "{{username}}/{{password}} — never reach the model" .-> PW
+        SM -. "injected at the browser" .-> RT
+        RT -->|"run record"| ST
+    end
+
+    subgraph Live["Consume — any agent"]
+        AG["ADK agent · Claude · curl"]
+    end
+
+    subgraph Heal["Heal — unattended, scheduled"]
+        CA["Scheduler / manual canary"]
+        HL["Healer<br/>step patch · full rebuild"]
+        CA -->|"canary replay"| RT
+        RT -->|"fails at step N"| HL
+        HL -->|"re-learn step / rebuild"| EX
+        HL -->|"publish next version"| RG
+    end
+
+    RG -->|"OpenAPI + SKILL.md"| AG
+    AG -->|"POST /connectors/{id}/{op}"| GATE
+    GATE -->|inputs checked| RT
+    GATE -->|"held · 202"| APP
+    APP -->|"approve → replay"| RT
+    RT -->|drives| T
+```
+
+What the boxes are, and where they live:
+
+| Box | Component | Role |
+| --- | --- | --- |
+| Explorer agent | `app/agents/explorer.py` | The only place a model touches the browser. ADK agent using Gemini 3.5 Flash, guarded by prompt-injection detection and a human pause before irreversible actions. Swap in any OpenAI-compatible endpoint (`CLICKWRIGHT_MODEL_BASE_URL`) with no change downstream. |
+| PlaywrightComputer | `app/computer/playwright_computer.py` | ADK's `BaseComputer` in a real Chromium. Resolves every click to a durable selector (`data-testid → id → name → label → text`), substitutes `{{credentials}}` at the browser so the model never sees them, and records the trajectory. |
+| Host fence | `app/computer/hosts.py` | Refuses navigation outside the connector's scope and the deployment-wide `TARGET_ALLOWED_HOSTS` ceiling. |
+| Distiller | `app/agents/distiller.py` | Compiles the one-off trajectory into a versioned playbook: which values become inputs, which assertions survive, selectors straight from the recording — never invented. |
+| Registry | `app/connectors/registry.py` | Semver versioning, publish/supersede, and the OpenAPI + SKILL.md documents generated on demand for any agent. |
+| Policy gateway | `app/governance/policy.py` | One boundary in front of every connector call: financial-threshold holds, instruction-style payload blocks, and the mid-run consequential-action pause. |
+| ConnectorRuntime | `app/connectors/runtime.py` | Deterministic replay of the playbook. No model, no tokens, seconds. Fails with the exact step index so the healer knows where to start. |
+| Healer | `app/agents/healer.py` | Scheduled canary replay; on failure, patches the one broken step or rebuilds the playbook, verifies, and publishes the next version. No human asked. |
+| Store / Secret store | `app/store.py`, `app/governance/secrets.py` | Runs, approvals, benchmarks and credentials. Firestore + Secret Manager on Cloud; identical JSON-on-disk stores so the whole system runs on a laptop with no cloud account. |
+
+**Google Cloud surface:** the whole service deploys to **Cloud Run**,
+persistence is **Firestore** (registry, runs, approvals, benchmarks), secrets
+live in **Secret Manager**, and every model turn, connector call and browser
+step is a **Cloud Trace** span. The scheduler fires the nightly canary.
+Nothing else is claimed: no Pub/Sub, no Cloud SQL, no GKE — the less there is
+to maintain, the closer this is to something a judge can run.
+
+---
+
 ## What to point it at
 
 **Works well**
