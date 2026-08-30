@@ -84,33 +84,27 @@ cp .env.example .env      # add your GOOGLE_API_KEY (free from Google AI Studio)
 make install              # venv + Chromium + frontend deps
 ```
 
-Open three terminals:
+Two terminals get you going:
 
 ```bash
-make portal     # :8081   a bundled target system
 make api        # :8080   control plane + connector gateway
 make console    # :5173   web console
 ```
 
+`make portal` is optional. It boots the bundled demo target — a tiny fake "vendor
+portal" whose UI can be broken on purpose — for reproducing this README's local
+experiments step by step. Skip it if you'd rather point Clickwright at a real
+website; that's the intended use.
+
 Open [http://localhost:5173](http://localhost:5173):
 
-1. The **Live** view comes pre-loaded with a sample target — hit **Start** and watch it
+1. The **Live** view comes pre-loaded with a target — hit **Start** and watch it
    work: each step appears with its reasoning and a screenshot.
-2. Once it wraps up, the connector shows up under **Registry**. Try calling it the way
-   a separate agent would (this is the bundled sample only — your own connectors mirror
-   whichever site you aimed it at):
-
-   ```bash
-   # sample call against the bundled target
-   curl -X POST http://localhost:8080/connectors/vendor-portal/expense-claim \
-     -H 'content-type: application/json' \
-     -d '{"claim_type":"Travel","invoice_reference":"INV-2","amount_usd":"120.00","cost_centre":"CC-4410"}'
-   ```
-
-   A moment later you're handed the confirmation reference. No model sat in that path.
-3. Turn **Live** toward any real site you're allowed to use — swap in the URL and spell
-   out the task in everyday language. Any website works: supplier portals, medical
-   booking, news, shops, internal admin panels. Sign-in credentials slot into **Add
+2. Once it wraps up, the connector shows up under **Registry** as a callable endpoint.
+   The next section plays a real call out end to end against a public healthcare demo.
+3. Or turn **Live** toward any site you're allowed to use — swap in the URL and spell
+   out the task in everyday language. Any website works: clinic booking, insurance,
+   HR portals, e-commerce, internal admin panels. Sign-in credentials slot into **Add
    sign-in details**, are kept away from the model, and get swapped in at the browser
    automatically.
 
@@ -139,18 +133,19 @@ Keeping an eye on ten connectors 24/7 is free until a site genuinely changes.
 
 Exploration is only the first move. What a Clickwright run produces is a **connector**:
 a versioned, deterministic API bolted onto a website that had none. Any agent treats it
-like any other tool — below is what genuinely travels the wire, using the bundled
-sample target.
+like any other tool — below is what genuinely travels the wire, using an actual
+appointment-booking flow recorded against Katalon's public healthcare demo
+(`katalon-demo-cura.herokuapp.com`), a site with no API of its own.
 
 **Find it.** `GET /api/connectors` enumerates what this fleet already offers:
 
 ```json
 [
   {
-    "id": "vendor-portal",
-    "portal": "vendor-portal",
-    "operation": "expense-claim",
-    "path": "/connectors/vendor-portal/expense-claim",
+    "id": "katalon-demo-cura-herokuapp-com",
+    "portal": "katalon-demo-cura.herokuapp.com",
+    "operation": "book-appointment",
+    "path": "/connectors/katalon-demo-cura-herokuapp-com/book-appointment",
     "active_version": "1.0.0"
   }
 ]
@@ -159,16 +154,16 @@ sample target.
 **Invoke it.** A straightforward HTTP POST carrying a JSON body:
 
 ```bash
-curl -X POST http://localhost:8080/connectors/vendor-portal/expense-claim \
+curl -X POST http://localhost:8080/connectors/katalon-demo-cura-herokuapp-com/book-appointment \
   -H 'content-type: application/json' \
-  -d '{"claim_type":"Travel","invoice_reference":"INV-2","amount_usd":"120.00","cost_centre":"CC-4410"}'
+  -d '{"facility":"Seoul CURA Healthcare Center","program":"Medicaid","visit_date":"30/08/2026","readmission":false}'
 ```
 
 ```json
 {
   "status": "ok",
-  "reference": "EC-2026-1042",
-  "confirmation": "Expense claim EC-2026-1042 recorded. Pending approval by Finance.",
+  "reference": "AP-2026-0314",
+  "confirmation": "Appointment #2401 confirmed. Seoul CURA Healthcare Center, 30/08/2026, program Medicaid.",
   "run_id": "run_a1b2c3",
   "version": "1.0.0"
 }
@@ -188,8 +183,8 @@ an ADK skill file, produced on demand from the active version. An agent pulls th
 like any tool — zero integration code:
 
 ```bash
-curl -s localhost:8080/api/connectors/vendor-portal/openapi
-curl -s localhost:8080/api/connectors/vendor-portal/skill
+curl -s localhost:8080/api/connectors/katalon-demo-cura-herokuapp-com/openapi
+curl -s localhost:8080/api/connectors/katalon-demo-cura-herokuapp-com/skill
 ```
 
 The OpenAPI document (abridged):
@@ -198,15 +193,15 @@ The OpenAPI document (abridged):
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "vendor-portal — expense-claim",
+    "title": "katalon-demo-cura.herokuapp.com — book-appointment",
     "version": "1.0.0",
-    "description": "Compiled from a computer-use run against vendor-portal, which exposes no API. 16 deterministic steps."
+    "description": "Compiled from a computer-use run against katalon-demo-cura.herokuapp.com, which exposes no API. 7 deterministic steps."
   },
   "servers": [{ "url": "http://localhost:8080" }],
   "paths": {
-    "/connectors/vendor-portal/expense-claim": {
+    "/connectors/katalon-demo-cura-herokuapp-com/book-appointment": {
       "post": {
-        "operationId": "expense_claim",
+        "operationId": "book_appointment",
         "requestBody": {
           "required": true,
           "content": {
@@ -214,12 +209,12 @@ The OpenAPI document (abridged):
               "schema": {
                 "type": "object",
                 "properties": {
-                  "claim_type":        { "type": "string", "description": "Claim type", "example": "Travel" },
-                  "invoice_reference": { "type": "string", "description": "Invoice reference", "example": "INV-2" },
-                  "amount_usd":        { "type": "string", "description": "Claim amount in USD", "example": "120.00" },
-                  "cost_centre":       { "type": "string", "description": "Cost centre", "example": "CC-4410" }
+                  "facility":     { "type": "string", "description": "CURA facility", "example": "Seoul CURA Healthcare Center" },
+                  "program":      { "type": "string", "description": "Healthcare program", "example": "Medicaid" },
+                  "visit_date":   { "type": "string", "description": "Visit date, DD/MM/YYYY", "example": "30/08/2026" },
+                  "readmission":  { "type": "boolean", "description": "Check hospital readmission", "example": false }
                 },
-                "required": ["claim_type", "invoice_reference", "amount_usd", "cost_centre"]
+                "required": ["facility", "program", "visit_date", "readmission"]
               }
             }
           }
@@ -238,18 +233,18 @@ The skill file, ready to drop into ADK's `SkillRegistry`:
 
 ```markdown
 ---
-name: vendor-portal-expense-claim
-description: expense-claim on vendor-portal, a system with no API. Use when a task requires expense claim.
+name: cura-book-appointment
+description: book-appointment on katalon-demo-cura.herokuapp.com, a system with no API. Use when a task requires booking a medical appointment.
 ---
 
-# vendor-portal — expense-claim
+# katalon-demo-cura.herokuapp.com — book-appointment
 
-Call `POST /connectors/vendor-portal/expense-claim` with:
+Call `POST /connectors/katalon-demo-cura-herokuapp-com/book-appointment` with:
 
-- `claim_type` (string) — Claim type: Travel, Equipment or Subsistence
-- `invoice_reference` (string) — Invoice reference from the purchase
-- `amount_usd` (string) — Claim amount in US dollars
-- `cost_centre` (string) — Internal cost centre code
+- `facility` (string) — CURA facility: Seoul, Tokyo or Hongkong CURA Healthcare Center
+- `program` (string) — Healthcare program: Medicaid, Medicare or None
+- `visit_date` (string) — Visit date, DD/MM/YYYY
+- `readmission` (boolean) — Whether to apply for hospital readmission
 
 Compiled from run `run_a1b2c3`, version 1.0.0.
 ```
