@@ -16,6 +16,7 @@ export const api = {
   connectors: () => json<Connector[]>('/api/connectors'),
   connector: (id: string) => json<Connector>(`/api/connectors/${id}`),
   openapi: (id: string) => json<unknown>(`/api/connectors/${id}/openapi`),
+  skill: (id: string) => json<{ skill_md: string }>(`/api/connectors/${id}/skill`),
   diff: (id: string, base: string, head: string) =>
     json<DiffResult>(`/api/connectors/${id}/diff?base=${base}&head=${head}`),
 

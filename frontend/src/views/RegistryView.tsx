@@ -13,6 +13,7 @@ export function RegistryView({
 }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [spec, setSpec] = useState<{ id: string; body: string } | null>(null);
+  const [skill, setSkill] = useState<{ id: string; body: string } | null>(null);
 
   if (error) return <div className="panel"><div className="empty"><p>{error}</p></div></div>;
   if (!connectors) return <div className="panel"><div className="empty"><p className="dim">Loading…</p></div></div>;
@@ -45,6 +46,11 @@ export function RegistryView({
   async function showSpec(id: string) {
     const body = await api.openapi(id);
     setSpec({ id, body: JSON.stringify(body, null, 2) });
+  }
+
+  async function showSkill(id: string) {
+    const body = await api.skill(id);
+    setSkill({ id, body: body.skill_md });
   }
 
   return (
@@ -91,6 +97,7 @@ export function RegistryView({
                     <td>
                       <div className="row">
                         <button className="btn btn-sm" onClick={() => showSpec(c.id)}>Spec</button>
+                        <button className="btn btn-sm" onClick={() => showSkill(c.id)}>Skill</button>
                         <button
                           className="btn btn-sm"
                           disabled={busy === c.id}
@@ -119,6 +126,22 @@ export function RegistryView({
             <p className="dim" style={{ fontSize: '.8rem', marginBottom: 0 }}>
               This is what a consuming agent loads through ADK's <code>OpenAPIToolset</code>.
               The <code>servers</code> block is the only place the base URL can come from.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {skill && (
+        <div className="panel">
+          <div className="panel-head">
+            <span className="panel-label">Skill (SKILL.md) — {skill.id}</span>
+            <button className="btn btn-sm" onClick={() => setSkill(null)}>Close</button>
+          </div>
+          <div className="panel-body">
+            <pre className="payload">{skill.body}</pre>
+            <p className="dim" style={{ fontSize: '.8rem', marginBottom: 0 }}>
+              The connector as an agent skill — loadable into any agent that reads
+              <code> SKILL.md</code>, so a fleet agent can discover and call it by name.
             </p>
           </div>
         </div>

@@ -66,77 +66,77 @@ export function Approvals({
         <span className="panel-label">Waiting on you</span>
         <span className="mono dim">{approvals.length} pending</span>
       </div>
-      {approvals.map((approval) => {
-        const asking = approval.kind === 'input_needed';
-        return (
-          <div className="approval" key={approval.id}>
-            <div className="row">
-              <span className={asking ? 'tag' : 'tag tag-danger'}>
-                {asking ? 'needs an answer' : approval.kind === 'in_run' ? 'paused mid-run' : 'held'}
-              </span>
-              <span className="mono faint">{approval.connector_id}</span>
-              <span className="mono faint">run {approval.run_id}</span>
-            </div>
+{approvals.map((approval) => {
+              const asking = approval.kind === 'input_needed';
+              return (
+                <div className={`approval approval-card`} key={approval.id}>
+                  <div className="row">
+                    <span className={asking ? 'tag tag-warm' : 'tag tag-danger'}>
+                      {asking ? 'needs an answer' : approval.kind === 'in_run' ? 'paused mid-run' : 'held'}
+                    </span>
+                    <span className="mono faint">{approval.connector_id}</span>
+                    <span className="mono faint">run {approval.run_id}</span>
+                  </div>
 
-            <p className="approval-reason" style={{ margin: 0 }}>{approval.reason}</p>
+                  <p className="approval-reason" style={{ margin: 0 }}>{approval.reason}</p>
 
-            {approval.screenshot && approval.run_id && (
-              <img
-                src={artifactUrl(approval.run_id, approval.screenshot)}
-                alt="What the agent is looking at"
-                style={{ maxWidth: '100%', borderRadius: 6, border: '1px solid var(--line-soft)' }}
-              />
-            )}
+                  {approval.screenshot && approval.run_id && (
+                    <img
+                      src={artifactUrl(approval.run_id, approval.screenshot)}
+                      alt="What the agent is looking at"
+                      style={{ maxWidth: '100%', borderRadius: 6, border: '1px solid var(--line-soft)' }}
+                    />
+                  )}
 
-            {approval.target && (
-              <p className="dim" style={{ margin: 0, fontSize: '.78rem' }}>
-                on <span className="mono">{approval.target}</span>
-              </p>
-            )}
+                  {approval.target && (
+                    <p className="dim" style={{ margin: 0, fontSize: '.78rem' }}>
+                      on <span className="mono">{approval.target}</span>
+                    </p>
+                  )}
 
-            {!asking && Object.keys(approval.payload ?? {}).length > 0 && (
-              <pre className="payload">{JSON.stringify(approval.payload, null, 2)}</pre>
-            )}
+                  {!asking && Object.keys(approval.payload ?? {}).length > 0 && (
+                    <pre className="payload">{JSON.stringify(approval.payload, null, 2)}</pre>
+                  )}
 
-            {asking ? (
-              <div className="row">
-                <input
-                  aria-label={approval.reason}
-                  value={answers[approval.id] ?? ''}
-                  onChange={(e) => setAnswers({ ...answers, [approval.id]: e.target.value })}
-                  onKeyDown={(e) => e.key === 'Enter' && answer(approval.id)}
-                  placeholder="Type the answer and press Enter"
-                  style={{ flex: 1, minWidth: 200 }}
-                />
-                <button
-                  className="btn btn-primary btn-sm"
-                  disabled={busy === approval.id || !(answers[approval.id] ?? '').trim()}
-                  onClick={() => answer(approval.id)}
-                >
-                  Send to the agent
-                </button>
-              </div>
-            ) : (
-              <div className="row">
-                <button
-                  className="btn btn-primary btn-sm"
-                  disabled={busy === approval.id}
-                  onClick={() => decide(approval.id, 'approve')}
-                >
-                  {approval.kind === 'in_run' ? 'Let it continue' : 'Approve and run'}
-                </button>
-                <button
-                  className="btn btn-danger btn-sm"
-                  disabled={busy === approval.id}
-                  onClick={() => decide(approval.id, 'deny')}
-                >
-                  Deny
-                </button>
-              </div>
-            )}
-          </div>
-        );
-      })}
+                  {asking ? (
+                    <div className="row">
+                      <input
+                        aria-label={approval.reason}
+                        value={answers[approval.id] ?? ''}
+                        onChange={(e) => setAnswers({ ...answers, [approval.id]: e.target.value })}
+                        onKeyDown={(e) => e.key === 'Enter' && answer(approval.id)}
+                        placeholder="Type the answer and press Enter"
+                        style={{ flex: 1, minWidth: 200 }}
+                      />
+                      <button
+                        className="btn btn-primary btn-sm"
+                        disabled={busy === approval.id || !(answers[approval.id] ?? '').trim()}
+                        onClick={() => answer(approval.id)}
+                      >
+                        Send to the agent
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="row">
+                      <button
+                        className="btn btn-primary btn-sm"
+                        disabled={busy === approval.id}
+                        onClick={() => decide(approval.id, 'approve')}
+                      >
+                        {approval.kind === 'in_run' ? 'Let it continue' : 'Approve and run'}
+                      </button>
+                      <button
+                        className="btn btn-danger btn-sm"
+                        disabled={busy === approval.id}
+                        onClick={() => decide(approval.id, 'deny')}
+                      >
+                        Deny
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
     </div>
   );
 }

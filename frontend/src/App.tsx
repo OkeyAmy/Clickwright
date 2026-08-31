@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef, useState, useEffect } from 'react';
 import { api } from './api';
 import { useEvents, useResource } from './useEvents';
 import type { ServerEvent, Step } from './types';
@@ -33,6 +33,7 @@ export default function App() {
   const [status, setStatus] = useState<Status>({ state: 'idle', text: 'idle' });
   const [liveSteps, setLiveSteps] = useState<Step[]>([]);
   const [activeRunId, setActiveRunId] = useState<string | null>(null);
+  const [railOpen, setRailOpen] = useState(false);
   const runIdRef = useRef<string | null>(null);
 
   const connectors = useResource(api.connectors, []);
@@ -103,9 +104,14 @@ export default function App() {
   const meta = VIEWS[view];
   const pending = approvals.data?.length ?? 0;
 
+  // Close rail on view change on mobile
+  useEffect(() => {
+    setRailOpen(false);
+  }, [view]);
+
   return (
     <div className="app">
-      <nav className="rail" aria-label="Sections">
+      <nav className={`rail ${railOpen ? 'open' : ''}`} aria-label="Sections">
         <div className="brand">
           <span className="brand-mark" aria-hidden />
           <span className="brand-name">Clickwright</span>
@@ -141,12 +147,32 @@ export default function App() {
         </div>
       </nav>
 
+      {/* Mobile rail overlay */}
+      <div
+        className={`rail-overlay ${railOpen ? 'open' : ''}`}
+        onClick={() => setRailOpen(false)}
+        aria-hidden="true"
+      />
+
       <header className="chrome">
         <div>
           <h1>{meta.title}</h1>
           <p className="chrome-sub">{meta.sub}</p>
         </div>
         <div className="chrome-actions">
+          {/* Mobile rail toggle */}
+          <button
+            className="rail-toggle"
+            onClick={() => setRailOpen(true)}
+            aria-label="Open navigation"
+            aria-expanded={railOpen}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
           {/* title carries the full reason on hover; the pill itself never wraps */}
           <span className="pill" data-state={status.state} title={status.text}>
             <i className="pip" />
